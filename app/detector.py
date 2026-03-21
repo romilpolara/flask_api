@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import io
 import os
+import tempfile
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -11,9 +12,22 @@ import requests
 from PIL import Image, UnidentifiedImageError
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-ULTRALYTICS_DIR = BASE_DIR / ".ultralytics"
-ULTRALYTICS_DIR.mkdir(exist_ok=True)
-os.environ.setdefault("YOLO_CONFIG_DIR", str(ULTRALYTICS_DIR))
+
+
+def _resolve_ultralytics_dir() -> Path:
+    configured_dir = os.getenv("YOLO_CONFIG_DIR")
+    if configured_dir:
+        target = Path(configured_dir)
+    else:
+        # Azure App Service can mount deployed code as read-only, so prefer a writable temp dir.
+        target = Path(tempfile.gettempdir()) / "ultralytics"
+
+    target.mkdir(parents=True, exist_ok=True)
+    return target
+
+
+ULTRALYTICS_DIR = _resolve_ultralytics_dir()
+os.environ["YOLO_CONFIG_DIR"] = str(ULTRALYTICS_DIR)
 
 from ultralytics import YOLO
 

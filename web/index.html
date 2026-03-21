@@ -1,0 +1,556 @@
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Smart Object Detector | Global Garbage Analysis</title>
+    <!-- Google Fonts: Inter and Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #ec4899;
+            --accent: #10b981;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, .brand {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4rem;
+            padding-top: 1rem;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #818cf8, #ec4899);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 1.25rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* 🖼️ Upload Section */
+        .upload-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px border var(--border);
+            border-radius: 24px;
+            padding: 3rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
+
+        .upload-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -15px rgba(79, 70, 229, 0.3);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .upload-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-card p {
+            color: var(--text-muted);
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        /* 📊 Results Grid */
+        .results-grid {
+            display: none; /* Shown after detection */
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 3rem;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-image-container {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: #000;
+            height: fit-content;
+        }
+
+        .result-image-container img {
+            width: 100%;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .stats-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-title {
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'Outfit';
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .badge-green { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        .badge-red { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+        .detection-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .detection-item:last-child {
+            border-bottom: none;
+        }
+
+        /* 🛠️ Developer Section */
+        .developer-section {
+            margin-top: 6rem;
+            border-top: 1px solid var(--border);
+            padding-top: 4rem;
+        }
+
+        .code-block {
+            background: #000;
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-family: monospace;
+            color: #d1d5db;
+            overflow-x: auto;
+            position: relative;
+            margin: 1rem 0;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        /* 🔄 Loading Spinner */
+        #loader {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--border);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        footer {
+            text-align: center;
+            padding: 4rem 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 900px) {
+            .results-grid { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <p>AI is analyzing your image...</p>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="brand">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"/><path d="m4.93 4.93 4.24 4.24"/><path d="M22 12h-8"/><path d="m19.07 19.07-4.24-4.24"/><path d="M12 22v-8"/><path d="m4.93 19.07 4.24-4.24"/><path d="M2 12h8"/><path d="m19.07 4.93-4.24 4.24"/></svg>
+                SMART DETECT
+            </div>
+            <nav>
+                <a href="#developers" style="color: var(--text-muted); text-decoration: none; font-weight: 500; font-size: 0.9rem;">API Documentation</a>
+            </nav>
+        </header>
+
+        <section class="hero">
+            <h1>Global AI Intelligence</h1>
+            <p>Deploy object detection anywhere. High-speed, real-time analysis for your web and mobile applications.</p>
+        </section>
+
+        <section class="upload-section">
+            <div class="upload-card" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                <span class="upload-icon">📸</span>
+                <h3>Upload Image</h3>
+                <p>Drag and drop or click to select an image for AI detection</p>
+                <input type="file" id="file-input" accept="image/*">
+            </div>
+        </section>
+
+        <section class="results-grid" id="results">
+            <div class="result-image-container">
+                <img id="processed-image" src="" alt="Detection Results">
+            </div>
+            
+            <div class="stats-panel">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Analysis Summary</span>
+                        <span id="bio-badge" class="badge"></span>
+                    </div>
+                    <div id="analysis-message" class="stat-value">Checking...</div>
+                    <p id="analysis-reason" style="margin-top: 0.5rem; color: var(--text-muted); font-size: 0.9rem;"></p>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-title">Environmental Impact</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                        <div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">Energy Potential</div>
+                            <div id="energy-val" class="stat-value" style="color: var(--accent);">0.0 kWh</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">Total Mass</div>
+                            <div id="mass-val" class="stat-value" style="color: var(--secondary);">0.0 kg</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-title">Detected Objects (<span id="count-val">0</span>)</div>
+                    <div id="detections-list" style="margin-top: 0.5rem; max-height: 250px; overflow-y: auto;">
+                        <!-- Detections will be injected here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="developer-section" id="developers">
+            <h2 style="margin-bottom: 2rem; font-size: 2.5rem;">Developer API</h2>
+            
+            <div style="margin-bottom: 3rem;">
+                <h3>1. Global API Link</h3>
+                <p style="color: var(--text-muted); margin: 0.5rem 0 1rem 0;">Use this endpoint to process images from any platform (Web, Android, iOS, Flutter).</p>
+                <div class="code-block">
+                    <span id="api-url-text">POST /predict</span>
+                    <button class="copy-btn" onclick="copyText('api-url-text')">Copy</button>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 3rem;">
+                <h3>2. Universal Web Widget</h3>
+                <p style="color: var(--text-muted); margin: 0.5rem 0 1rem 0;">Add this script to any website to instantly enable AI detection functionality.</p>
+                <div class="code-block">
+                    &lt;script src="<span id="widget-url-text"></span>widget.js"&gt;&lt;/script&gt;
+                    <button class="copy-btn" onclick="copyText('widget-url-text')">Copy</button>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 3rem;">
+                <h3>3. Javascript Integration</h3>
+                <div class="code-block">
+<pre>const formData = new FormData();
+formData.append('image', file);
+
+const response = await fetch('YOUR_RENDER_URL/predict', {
+    method: 'POST',
+    body: formData
+});
+
+const data = await response.json();
+console.log(data.detections); // Access detected objects</pre>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            &copy; 2024 Smart Detect AI | Powered by YOLOv8 Intelligence
+        </footer>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const loader = document.getElementById('loader');
+        const results = document.getElementById('results');
+        const processedImage = document.getElementById('processed-image');
+        const dropZone = document.getElementById('drop-zone');
+
+        // Set dynamic URL in docs
+        const currentUrl = window.location.origin + '/';
+        document.getElementById('api-url-text').innerText = currentUrl + 'predict';
+        document.getElementById('widget-url-text').innerText = currentUrl;
+
+        fileInput.addEventListener('change', e => {
+            if (e.target.files.length > 0) processImage(e.target.files[0]);
+        });
+
+        // 📏 Resize image before upload to save server memory (important for Render)
+        async function resizeImage(file, maxWidth = 640, maxHeight = 640) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height *= maxWidth / width;
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width *= maxHeight / height;
+                            height = maxHeight;
+                        }
+                    }
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    canvas.toBlob((blob) => {
+                        resolve(blob);
+                    }, 'image/jpeg', 0.8);
+                };
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        async function processImage(file) {
+            loader.style.display = 'flex';
+            results.style.display = 'none';
+
+            try {
+                // 1. Resize image (prevents server memory crash)
+                const resizedBlob = await resizeImage(file);
+                
+                const formData = new FormData();
+                formData.append('image', resizedBlob, 'resized.jpg');
+
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                let data;
+                const contentType = response.headers.get("content-type");
+                
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    data = await response.json();
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`Server returned non-JSON response (${response.status}). The server might be restarting or crashing.`);
+                }
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Detection failed');
+                }
+
+                displayResults(data);
+            } catch (err) {
+                alert('AI Server Error: ' + err.message);
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function displayResults(data) {
+            results.style.display = 'grid';
+            processedImage.src = data.image_url;
+
+            // Stats
+            document.getElementById('analysis-message').innerText = data.biodegradability_analysis.message;
+            document.getElementById('analysis-reason').innerText = data.biodegradability_analysis.reason;
+            
+            const badge = document.getElementById('bio-badge');
+            if (data.biodegradability_analysis.is_biodegradable) {
+                badge.innerText = 'BIODEGRADABLE';
+                badge.className = 'badge badge-green';
+            } else {
+                badge.innerText = 'NON-BIO';
+                badge.className = 'badge badge-red';
+            }
+
+            document.getElementById('energy-val').innerText = data.energy_analysis.total_energy_potential_kwh + ' kWh';
+            document.getElementById('mass-val').innerText = data.energy_analysis.total_mass_kg + ' kg';
+            document.getElementById('count-val').innerText = data.total_detections;
+
+            // Detections List
+            const list = document.getElementById('detections-list');
+            list.innerHTML = '';
+            data.detections.forEach(det => {
+                const item = document.createElement('div');
+                item.className = 'detection-item';
+                item.innerHTML = `
+                    <span style="font-weight: 500;">${det.label}</span>
+                    <span style="color: var(--text-muted); font-size: 0.8rem;">
+                        ${(det.confidence * 100).toFixed(1)}% | ${det.mass_kg}kg
+                    </span>
+                `;
+                list.appendChild(item);
+            });
+
+            // Scroll to results
+            results.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Copy Helper
+        function copyText(id) {
+            const text = document.getElementById(id).innerText;
+            navigator.clipboard.writeText(text);
+            alert('Copied to clipboard!');
+        }
+
+        // Drag & Drop
+        dropZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--primary)';
+        });
+
+        dropZone.addEventListener('dragleave', e => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--border)';
+        });
+
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--border)';
+            if (e.dataTransfer.files.length > 0) processImage(e.dataTransfer.files[0]);
+        });
+    </script>
+</body>
+</html>

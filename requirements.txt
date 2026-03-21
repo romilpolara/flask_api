@@ -2,7 +2,11 @@ fastapi==0.135.1
 uvicorn==0.37.0
 gunicorn>=23.0.0
 ultralytics==8.3.168
-torch>=2.7.1
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.7.1; platform_system == "Windows"
+torchvision==0.22.1; platform_system == "Windows"
+torch==2.7.1+cpu; platform_system != "Windows"
+torchvision==0.22.1+cpu; platform_system != "Windows"
 pillow>=11.3.0
 python-multipart>=0.0.20
 requests>=2.32.5

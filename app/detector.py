@@ -29,8 +29,6 @@ def _resolve_ultralytics_dir() -> Path:
 ULTRALYTICS_DIR = _resolve_ultralytics_dir()
 os.environ["YOLO_CONFIG_DIR"] = str(ULTRALYTICS_DIR)
 
-from ultralytics import YOLO
-
 from app.metadata import DEFAULT_ESTIMATION_NOTE, OBJECT_INFO
 
 MODEL_PATH = BASE_DIR / "model" / "best1.pt"
@@ -45,6 +43,10 @@ class YOLODetector:
         if not model_path.exists():
             raise DetectionError(f"Model file not found: {model_path}")
         self.model_path = model_path
+        try:
+            from ultralytics import YOLO
+        except Exception as exc:
+            raise DetectionError(f"Unable to import Ultralytics YOLO: {exc}") from exc
         self.model = YOLO(str(model_path))
 
     def get_labels(self) -> dict[int, str]:

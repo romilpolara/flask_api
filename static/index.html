@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Object Detection API Demo</title>
+  <style>
+    :root {
+      --bg: #f3efe6;
+      --panel: rgba(255, 252, 247, 0.9);
+      --ink: #1d2a35;
+      --accent: #0f766e;
+      --accent-2: #d97706;
+      --line: rgba(29, 42, 53, 0.12);
+      --shadow: 0 24px 60px rgba(29, 42, 53, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Bahnschrift, "Trebuchet MS", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(217, 119, 6, 0.18), transparent 28%),
+        radial-gradient(circle at top right, rgba(15, 118, 110, 0.18), transparent 32%),
+        linear-gradient(180deg, #fcfaf6 0%, var(--bg) 100%);
+      padding: 28px;
+    }
+
+    .shell {
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      display: grid;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 4rem);
+      line-height: 0.95;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      max-width: 10ch;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 68ch;
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 22px;
+    }
+
+    .card {
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .card h2 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    input[type="file"],
+    input[type="url"],
+    input[type="number"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font: inherit;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 13px 20px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 140ms ease, opacity 140ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .secondary {
+      background: #fff;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(15, 118, 110, 0.08);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .preview {
+      width: 100%;
+      min-height: 260px;
+      border-radius: 24px;
+      border: 1px dashed var(--line);
+      background: rgba(255, 255, 255, 0.65);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .preview img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    pre {
+      margin: 0;
+      max-height: 300px;
+      overflow: auto;
+      padding: 16px;
+      border-radius: 18px;
+      background: #18232e;
+      color: #edf2f7;
+      font-family: Consolas, monospace;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .info-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .info-item {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.76);
+    }
+
+    .info-item strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 1rem;
+    }
+
+    .muted {
+      color: rgba(29, 42, 53, 0.72);
+      line-height: 1.5;
+    }
+
+    @media (max-width: 860px) {
+      body {
+        padding: 18px;
+      }
+
+      .grid,
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <span class="pill">Global API Demo</span>
+      <h1>Detect Waste Objects From Any Client</h1>
+      <p>
+        This page is only a demo. The real product is the API, so you can call the same
+        detection endpoints from any website, Android app, iOS app, or backend service.
+      </p>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Try Detection</h2>
+        <div class="stack">
+          <label>
+            Upload image
+            <input id="fileInput" type="file" accept="image/*" />
+          </label>
+
+          <label>
+            Or image URL
+            <input id="urlInput" type="url" placeholder="https://example.com/image.jpg" />
+          </label>
+
+          <div class="row">
+            <label>
+              Confidence
+              <input id="confInput" type="number" min="0" max="1" step="0.05" value="0.25" />
+            </label>
+
+            <label>
+              IOU
+              <input id="iouInput" type="number" min="0" max="1" step="0.05" value="0.45" />
+            </label>
+          </div>
+
+          <div class="actions">
+            <button class="primary" id="fileButton" type="button">Detect From File</button>
+            <button class="secondary" id="urlButton" type="button">Detect From URL</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Preview</h2>
+        <div class="preview" id="previewBox">
+          <span class="muted">Annotated image will appear here.</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="grid" style="margin-top: 22px;">
+      <article class="card">
+        <h2>Detected Info</h2>
+        <div id="summary" class="muted">No detection yet.</div>
+        <div id="infoList" class="info-list"></div>
+      </article>
+
+      <article class="card">
+        <h2>Raw API Response</h2>
+        <pre id="jsonOutput">Run detection to see JSON.</pre>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const urlInput = document.getElementById("urlInput");
+    const confInput = document.getElementById("confInput");
+    const iouInput = document.getElementById("iouInput");
+    const previewBox = document.getElementById("previewBox");
+    const jsonOutput = document.getElementById("jsonOutput");
+    const infoList = document.getElementById("infoList");
+    const summary = document.getElementById("summary");
+
+    function renderResult(data) {
+      jsonOutput.textContent = JSON.stringify(data, null, 2);
+      summary.textContent = `${data.total_detections} object(s) detected`;
+      infoList.innerHTML = "";
+
+      if (!data.detected_object_info.length) {
+        infoList.innerHTML = '<div class="muted">No objects detected in this image.</div>';
+      }
+
+      data.detected_object_info.forEach((item) => {
+        const div = document.createElement("div");
+        div.className = "info-item";
+        div.innerHTML = `
+          <strong>${item.title} (${item.count})</strong>
+          <div class="muted">${item.description}</div>
+          <div class="muted"><b>Category:</b> ${item.category}</div>
+          <div class="muted"><b>Waste Nature:</b> ${item.waste_nature}</div>
+          <div class="muted"><b>Biodegradable:</b> ${item.is_biodegradable ? "Yes" : "No"}</div>
+          <div class="muted"><b>Recyclable:</b> ${item.is_recyclable ? "Yes" : "No"}</div>
+          <div class="muted"><b>Estimated Weight:</b> ${item.estimated_total_weight_kg} kg</div>
+          <div class="muted"><b>Estimated Energy:</b> ${item.estimated_total_energy_recovery_kwh} kWh</div>
+          <div class="muted"><b>Energy Method:</b> ${item.energy_recovery_method}</div>
+          <div class="muted"><b>Tip:</b> ${item.handling_tip}</div>
+        `;
+        infoList.appendChild(div);
+      });
+
+      if (data.sustainability_summary) {
+        summary.textContent =
+          `${data.total_detections} object(s) detected | ` +
+          `Biodegradable: ${data.sustainability_summary.biodegradable_objects} | ` +
+          `Recyclable: ${data.sustainability_summary.recyclable_objects} | ` +
+          `Estimated Weight: ${data.sustainability_summary.total_estimated_weight_kg} kg | ` +
+          `Estimated Energy: ${data.sustainability_summary.total_estimated_energy_recovery_kwh} kWh`;
+      }
+
+      if (data.annotated_image && data.annotated_image.base64) {
+        previewBox.innerHTML = "";
+        const img = document.createElement("img");
+        img.src = `data:${data.annotated_image.mime_type};base64,${data.annotated_image.base64}`;
+        img.alt = "Detection preview";
+        previewBox.appendChild(img);
+      }
+    }
+
+    function renderError(message) {
+      jsonOutput.textContent = message;
+      summary.textContent = "Detection failed";
+      infoList.innerHTML = `<div class="muted">${message}</div>`;
+      previewBox.innerHTML = '<span class="muted">Annotated image will appear here.</span>';
+    }
+
+    async function detectFromFile() {
+      const file = fileInput.files[0];
+      if (!file) {
+        renderError("Please select an image file first.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("conf", confInput.value);
+      formData.append("iou", iouInput.value);
+      formData.append("include_image", "true");
+
+      try {
+        const response = await fetch("/detect/file", {
+          method: "POST",
+          body: formData
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.detail || "Detection failed.");
+        }
+        renderResult(data);
+      } catch (error) {
+        renderError(error.message);
+      }
+    }
+
+    async function detectFromUrl() {
+      if (!urlInput.value.trim()) {
+        renderError("Please enter an image URL first.");
+        return;
+      }
+
+      try {
+        const response = await fetch("/detect/url", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            image_url: urlInput.value.trim(),
+            conf: Number(confInput.value),
+            iou: Number(iouInput.value),
+            include_image: true
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.detail || "Detection failed.");
+        }
+        renderResult(data);
+      } catch (error) {
+        renderError(error.message);
+      }
+    }
+
+    document.getElementById("fileButton").addEventListener("click", detectFromFile);
+    document.getElementById("urlButton").addEventListener("click", detectFromUrl);
+  </script>
+</body>
+</html>

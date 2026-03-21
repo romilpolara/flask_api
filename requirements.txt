@@ -1,0 +1,8 @@
+fastapi==0.135.1
+uvicorn==0.37.0
+gunicorn>=23.0.0
+ultralytics==8.3.168
+torch>=2.7.1
+pillow>=11.3.0
+python-multipart>=0.0.20
+requests>=2.32.5

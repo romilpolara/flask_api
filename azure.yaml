@@ -1,0 +1,8 @@
+name: global-object-detection-api
+metadata:
+  template: custom-object-detection-api
+services:
+  api:
+    project: .
+    host: containerapp
+    language: docker

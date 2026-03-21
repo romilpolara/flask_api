@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Example: Call Detection API</title>
+    <style>
+      body {
+        font-family: Bahnschrift, "Trebuchet MS", sans-serif;
+        margin: 32px;
+        color: #1d2a35;
+        background: #f5f0e7;
+      }
+
+      button {
+        padding: 10px 16px;
+        border-radius: 999px;
+        border: 0;
+        background: #0f766e;
+        color: white;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      pre {
+        background: #18232e;
+        color: #edf2f7;
+        padding: 16px;
+        border-radius: 16px;
+        overflow: auto;
+      }
+
+      img {
+        max-width: 700px;
+        display: block;
+        margin-top: 12px;
+        border-radius: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>Upload image to detection API</h3>
+    <p>This example calls the reusable API endpoint, so the same code pattern works from any web page.</p>
+    <input id="file" type="file" accept="image/*" />
+    <button id="send">Send</button>
+    <pre id="out"></pre>
+    <img id="annot" />
+
+    <script>
+      const send = document.getElementById("send");
+      const fileIn = document.getElementById("file");
+      const out = document.getElementById("out");
+      const annot = document.getElementById("annot");
+
+      send.onclick = async () => {
+        if (!fileIn.files.length) {
+          alert("Choose a file");
+          return;
+        }
+
+        const fd = new FormData();
+        fd.append("file", fileIn.files[0]);
+        fd.append("include_image", "true");
+
+        const res = await fetch("http://localhost:8000/detect/file", {
+          method: "POST",
+          body: fd
+        });
+
+        const data = await res.json();
+        out.textContent = JSON.stringify(data, null, 2);
+
+        if (data.annotated_image && data.annotated_image.base64) {
+          annot.src = "data:" + data.annotated_image.mime_type + ";base64," + data.annotated_image.base64;
+        } else {
+          annot.removeAttribute("src");
+        }
+      };
+    </script>
+  </body>
+</html>
